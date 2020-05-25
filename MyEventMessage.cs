@@ -1,12 +1,11 @@
-using System;
 using MassTransit;
 
 namespace MassTransitMessageDataTest
 {
-    public class MyCustomizedFile
+    public interface MyCustomizedFile
     {
-        public string Name { set; get; }
-        public MessageData<string> Content { set; get; }
+        string Name { set; get; }
+        MessageData<string> Content { set; get; }
     }
     public interface MyEventMessage
     {
