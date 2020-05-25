@@ -5,7 +5,7 @@ namespace MassTransitMessageDataTest
     public interface MyCustomizedFile
     {
         string Name { set; get; }
-        MessageData<string> Content { set; get; }
+        MessageData<byte[]> Content { set; get; }
     }
     public interface MyEventMessage
     {

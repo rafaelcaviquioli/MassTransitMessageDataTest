@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using MassTransit;
 using MassTransit.MessageData;
@@ -41,11 +42,37 @@ namespace MassTransitMessageDataTest
                         var file = context.Message.MyFile.Content;
                         if (file.HasValue)
                         {
-                            Console.Out.WriteLine("Event file value: " + await file.Value);
+                            Console.Out.WriteLine("Event file value: " + Encoding.ASCII.GetString(await file.Value));
                         }
                         else
                         {
                             Console.Out.WriteLine("Doesn't have file value");
+                        }
+                    });
+                    
+                    endpoint.Handler<ArrayFilesMessage>(async context =>
+                    {
+                        Console.Out.Write($"\nReceived the event {context.Message.Name} - ");
+                        
+                        var files = context.Message.Files;
+                        if (files.Length > 0)
+                        {
+                            Console.Out.WriteLine("Array files: " + files.Length.ToString());
+                            foreach (var file in files)
+                            {
+                                if (file.HasValue)
+                                {
+                                    Console.Out.WriteLine("File: " + Encoding.ASCII.GetString(await file.Value));    
+                                }
+                                else
+                                {
+                                    Console.Out.WriteLine("File doesn't exist");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Console.Out.WriteLine("Doesn't have array files");
                         }
                     });
                 });
@@ -62,17 +89,21 @@ namespace MassTransitMessageDataTest
 
                 await endpoint.Send<MyEventMessage>(new
                 {
-                    Name = "MyEvent with null message data",
-                    MyFile = new { Name = "My file name" },
-                });
-                
-                await endpoint.Send<MyEventMessage>(new
-                {
                     Name = "MyEvent with message data",
                     MyFile = new
                     {
                         Name = "My file name",
-                        Content = "file content..."
+                        Content = Encoding.ASCII.GetBytes("file content...")
+                    },
+                });
+                
+                await endpoint.Send<ArrayFilesMessage>(new
+                {
+                    Name = "MyEvent with message data",
+                    Files = new []
+                    {
+                        Encoding.ASCII.GetBytes("File 1 content..."),
+                        Encoding.ASCII.GetBytes("File 2 content...")
                     },
                 });
                 
