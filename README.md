@@ -1,0 +1,1 @@
+Project to reproduce bug mentioned on https://github.com/MassTransit/MassTransit/issues/1901
