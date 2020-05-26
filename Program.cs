@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using MassTransit;
@@ -11,6 +12,8 @@ namespace MassTransitMessageDataTest
     {
         static async Task Main(string[] args)
         {
+            byte[] fileData = Guid.NewGuid().ToByteArray();
+            
             var appSettings = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .Build();
@@ -52,7 +55,7 @@ namespace MassTransitMessageDataTest
                     
                     endpoint.Handler<ArrayFilesMessage>(async context =>
                     {
-                        Console.Out.Write($"\nReceived the event {context.Message.Name} - ");
+                        Console.Out.Write($"\nReceived the array event {context.Message.Name} - ");
                         
                         var files = context.Message.Files;
                         if (files.Length > 0)
@@ -93,17 +96,17 @@ namespace MassTransitMessageDataTest
                     MyFile = new
                     {
                         Name = "My file name",
-                        Content = Encoding.ASCII.GetBytes("file content...")
+                        Content = await messageDataRepository.PutBytes(fileData)
                     },
                 });
                 
                 await endpoint.Send<ArrayFilesMessage>(new
                 {
-                    Name = "MyEvent with message data",
+                    Name = "MyEvent with file array",
                     Files = new []
                     {
-                        Encoding.ASCII.GetBytes("File 1 content..."),
-                        Encoding.ASCII.GetBytes("File 2 content...")
+                        await messageDataRepository.PutBytes(fileData),
+                        await messageDataRepository.PutBytes(fileData)
                     },
                 });
                 
