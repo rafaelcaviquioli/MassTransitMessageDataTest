@@ -12,7 +12,7 @@ namespace MassTransitMessageDataTest
     {
         static async Task Main(string[] args)
         {
-            byte[] fileData = Guid.NewGuid().ToByteArray();
+            byte[] fileData = new byte[10000];
             
             var appSettings = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
@@ -38,21 +38,6 @@ namespace MassTransitMessageDataTest
 
                 cfg.ReceiveEndpoint("my-event-channel", endpoint =>
                 {
-                    endpoint.Handler<MyEventMessage>(async context =>
-                    {
-                        Console.Out.Write($"Received the event {context.Message.Name} - ");
-                        
-                        var file = context.Message.MyFile.Content;
-                        if (file.HasValue)
-                        {
-                            Console.Out.WriteLine("Event file value: " + Encoding.ASCII.GetString(await file.Value));
-                        }
-                        else
-                        {
-                            Console.Out.WriteLine("Doesn't have file value");
-                        }
-                    });
-                    
                     endpoint.Handler<ArrayFilesMessage>(async context =>
                     {
                         Console.Out.Write($"\nReceived the array event {context.Message.Name} - ");
@@ -60,12 +45,12 @@ namespace MassTransitMessageDataTest
                         var files = context.Message.Files;
                         if (files.Length > 0)
                         {
-                            Console.Out.WriteLine("Array files: " + files.Length.ToString());
+                            Console.Out.WriteLine("Array files: " + files.Length);
                             foreach (var file in files)
                             {
-                                if (file.HasValue)
+                                if (file.Content.HasValue)
                                 {
-                                    Console.Out.WriteLine("File: " + Encoding.ASCII.GetString(await file.Value));    
+                                    Console.Out.WriteLine("File: " + Encoding.ASCII.GetString(await file.Content.Value));    
                                 }
                                 else
                                 {
@@ -90,23 +75,13 @@ namespace MassTransitMessageDataTest
                 var uri = new Uri($"{appSettings["rabbitmq:host"]}my-event-channel");
                 var endpoint = await busControl.GetSendEndpoint(uri);
 
-                await endpoint.Send<MyEventMessage>(new
-                {
-                    Name = "MyEvent with message data",
-                    MyFile = new
-                    {
-                        Name = "My file name",
-                        Content = await messageDataRepository.PutBytes(fileData)
-                    },
-                });
-                
                 await endpoint.Send<ArrayFilesMessage>(new
                 {
                     Name = "MyEvent with file array",
                     Files = new []
                     {
-                        await messageDataRepository.PutBytes(fileData),
-                        await messageDataRepository.PutBytes(fileData)
+                        new { Content = fileData, Name = "File 1" },
+                        new { Content = fileData, Name = "File 2" },
                     },
                 });
                 
