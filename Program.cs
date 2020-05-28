@@ -80,8 +80,8 @@ namespace MassTransitMessageDataTest
                     Name = "MyEvent with file array",
                     Files = new []
                     {
-                        new { Content = fileData, Name = "File 1" },
-                        new { Content = fileData, Name = "File 2" },
+                        new { Content = await messageDataRepository.PutBytes(fileData), Name = "File 1" },
+                        new { Content = await messageDataRepository.PutBytes(fileData), Name = "File 2" },
                     },
                 });
                 
